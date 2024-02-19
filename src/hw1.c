@@ -23,16 +23,16 @@ void print_packet_sf(unsigned char packet[])
     printf("Packet Length: %u\n", packet_length );
 
     //Maximum Hop Count                                          
-    printf("Maximum Hop Count: %u\n", ((packet[11] & 0x1F) << 4) | (packet[12] >> 1));
+    printf("Maximum Hop Count: %u\n", ((packet[11] & 0x0F) << 1) | (packet[12]>>7));
 
     //Checksum
-    printf("Checksum: %u\n", (packet[12] << 16) | (packet[13] << 8) | packet[14] >> 8);
+    printf("Checksum: %u\n", ((packet[12] & 0X7F) << 16) | (packet[13] << 8) | packet[14]);
 
     //Compression Scheme
-    printf("Compression Scheme: %u\n", (packet[15] << 6));
+    printf("Compression Scheme: %u\n", (packet[15] >> 6));
 
     //Traffic Class
-    printf("Traffic Class: %u\n", packet[15]);
+    printf("Traffic Class: %u\n", packet[15] & 0X3F);
 
     //Payload
     printf("Payload: ");
