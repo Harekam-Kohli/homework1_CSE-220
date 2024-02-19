@@ -1,38 +1,50 @@
 #include "hw1.h"
 #include <stdio.h>
+#include <math.h>
+
+unsigned Source_Address, Destination_Address, Source_Port, Destination_Port, Fragment_Offset, packet_length, MHP, Check_Sum, Compression_Scheme, Traffic_Class;
 
 void print_packet_sf(unsigned char packet[])
 {
     //Source Address
-    printf("Source Address: %u\n", (packet[0] << 20) | (packet[1] << 12) | (packet[2] << 4) | packet[3] >> 4);
+    Source_Address =  (packet[0] << 20) | (packet[1] << 12) | (packet[2] << 4) | packet[3] >> 4;
+    printf("Source Address: %u\n", Source_Address);
 
     //Destination Address
-    printf("Destination Address: %u\n", ((packet[3] & 0X0F) << 24) | (packet[4] << 16) | (packet[5] << 8) | packet[6]);
+    Destination_Address = ((packet[3] & 0X0F) << 24) | (packet[4] << 16) | (packet[5] << 8) | packet[6];
+    printf("Destination Address: %u\n", Destination_Address);
 
     //Source Port
-    printf("Source Port: %u\n", (packet[7] >> 4) ); 
+    Source_Port = (packet[7] >> 4) ;
+    printf("Source Port: %u\n", Source_Port ); 
 
     //Destination Port
-    printf("Destination Port: %u\n", packet[7] & 0X0F);
+    Destination_Port = (packet[7] & 0X0F);
+    printf("Destination Port: %u\n", Destination_Port);
 
     //Fragment Offset
-    printf("Fragment Offset: %u\n", (packet[8]  << 6) | packet[9] >> 6);
+    Fragment_Offset = (packet[8]  << 6) | packet[9] >> 6;
+    printf("Fragment Offset: %u\n", Fragment_Offset );
 
     //Packet Length
-    unsigned packet_length = (packet[9] << 12 | packet[10] << 4 | packet[11] >> 4);
+    packet_length = (packet[9] << 12 | packet[10] << 4 | packet[11] >> 4);
     printf("Packet Length: %u\n", packet_length );
 
-    //Maximum Hop Count                                          
-    printf("Maximum Hop Count: %u\n", ((packet[11] & 0x0F) << 1) | (packet[12]>>7));
+    //Maximum Hop Count 
+    MHP = ((packet[11] & 0x0F) << 1) | (packet[12]>>7);                                        
+    printf("Maximum Hop Count: %u\n", MHP);
 
     //Checksum
-    printf("Checksum: %u\n", ((packet[12] & 0X7F) << 16) | (packet[13] << 8) | packet[14]);
+    Check_Sum = ((packet[12] & 0X7F) << 16) | (packet[13] << 8) | packet[14];
+    printf("Checksum: %u\n", Check_Sum);
 
     //Compression Scheme
-    printf("Compression Scheme: %u\n", (packet[15] >> 6));
+    Compression_Scheme= (packet[15] >> 6);
+    printf("Compression Scheme: %u\n",Compression_Scheme );
 
     //Traffic Class
-    printf("Traffic Class: %u\n", packet[15] & 0X3F);
+    Traffic_Class = packet[15] & 0X3F;
+    printf("Traffic Class: %u\n", Traffic_Class);
 
     //Payload
     printf("Payload: ");
@@ -48,10 +60,12 @@ void print_packet_sf(unsigned char packet[])
     printf("\n");
 }
 
+
 unsigned int compute_checksum_sf(unsigned char packet[])
 {
-    (void)packet;
-    return -1;
+    unsigned int sum= Source_Address + Destination_Address + Source_Port + Destination_Port + Fragment_Offset + packet_length + MHP + Check_Sum + Compression_Scheme + Traffic_Class;
+    sum = sum%(unsigned int)(( 1 << 23) - 1);
+    return sum;
 }
 
 unsigned int reconstruct_array_sf(unsigned char *packets[], unsigned int packets_len, int *array, unsigned int array_len) {
