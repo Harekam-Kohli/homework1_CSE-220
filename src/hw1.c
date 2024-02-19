@@ -1,8 +1,46 @@
 #include "hw1.h"
+#include <stdio.h>
 
 void print_packet_sf(unsigned char packet[])
 {
-    (void)packet;
+    //Source Address
+    printf("Source Address: %u\n", (packet[0] << 20) | (packet[1] << 12) | (packet[2] << 4) | packet[3] >> 4);
+
+    //Destination Address
+    printf("Destination Address: %u\n", (packet[3] << 20) | (packet[4] << 12) | (packet[5] << 4) | packet[6] >> 4);
+
+    //Source Port
+    printf("Source Port: %u\n", (packet[7] >> 4) ); 
+
+    //Destination Port
+    printf("Destination Port: %u\n", packet[7] << 4);
+
+    //Fragment Offset
+    printf("Fragment Offset: %u\n", (packet[8]  << 6) | packet[9] >> 6);
+
+    //Packet Length
+    unsigned packet_length = (packet[9] << 12) | packet[10] << 4 | packet[11] >> 4;
+    printf("Packet Length: %u\n", packet_length );
+
+    //Maximum Hop Count                                          
+    printf("Maximum Hop Count: %u\n", (packet[11] << 1) | packet[12] >> 1);
+
+    //Checksum
+    printf("Checksum: %u\n", (packet[12] << 16) | (packet[13] << 8) | packet[14] >> 8);
+
+    //Compression Scheme
+    printf("Compression Scheme: %u\n", (packet[15] << 6));
+
+    //Traffic Class
+    printf("Traffic Class: %u\n", packet[15]);
+
+    //Payload
+    printf("Payload: ");
+    for (int i = 16; i < packet_length ; i += 4) {
+        int payload_chunk = (packet[i] << 24) | (packet[i + 1] << 16) | (packet[i + 2] << 8) | packet[i + 3];
+        printf("%d ", payload_chunk);
+    }
+    printf("\n");
 }
 
 unsigned int compute_checksum_sf(unsigned char packet[])
