@@ -31,7 +31,7 @@ void print_packet_sf(unsigned char packet[])
     printf("Packet Length: %u\n", packet_length );
 
     //Maximum Hop Count 
-    MHP = ((packet[11] & 0x0F) << 1) | (packet[12]>>7);                                        
+    MHP = ((packet[11] & 0x0F) << 1) | (packet[12]>>7);
     printf("Maximum Hop Count: %u\n", MHP);
 
     //Checksum
@@ -63,6 +63,17 @@ void print_packet_sf(unsigned char packet[])
 
 unsigned int compute_checksum_sf(unsigned char packet[])
 {
+    Source_Address =  (packet[0] << 20) | (packet[1] << 12) | (packet[2] << 4) | packet[3] >> 4;
+    Destination_Address = ((packet[3] & 0X0F) << 24) | (packet[4] << 16) | (packet[5] << 8) | packet[6];
+    Source_Port = (packet[7] >> 4) ;
+    Destination_Port = (packet[7] & 0X0F);
+    Fragment_Offset = (packet[8]  << 6) | packet[9] >> 6;
+    packet_length = (packet[9] << 12 | packet[10] << 4 | packet[11] >> 4);
+    MHP = ((packet[11] & 0x0F) << 1) | (packet[12]>>7);
+    Check_Sum = ((packet[12] & 0X7F) << 16) | (packet[13] << 8) | packet[14];
+    Compression_Scheme= (packet[15] >> 6);
+    Traffic_Class = packet[15] & 0X3F;
+
     unsigned int sum= Source_Address + Destination_Address + Source_Port + Destination_Port + Fragment_Offset + packet_length + MHP + Check_Sum + Compression_Scheme + Traffic_Class;
     sum = sum%(unsigned int)(( 1 << 23) - 1);
     return sum;
