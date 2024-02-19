@@ -7,23 +7,23 @@ void print_packet_sf(unsigned char packet[])
     printf("Source Address: %u\n", (packet[0] << 20) | (packet[1] << 12) | (packet[2] << 4) | packet[3] >> 4);
 
     //Destination Address
-    printf("Destination Address: %u\n", (packet[3] << 20) | (packet[4] << 12) | (packet[5] << 4) | packet[6] >> 4);
+    printf("Destination Address: %u\n", ((packet[3] & 0X0F) << 24) | (packet[4] << 16) | (packet[5] << 8) | packet[6]);
 
     //Source Port
     printf("Source Port: %u\n", (packet[7] >> 4) ); 
 
     //Destination Port
-    printf("Destination Port: %u\n", packet[7] << 4);
+    printf("Destination Port: %u\n", packet[7] & 0X0F);
 
     //Fragment Offset
     printf("Fragment Offset: %u\n", (packet[8]  << 6) | packet[9] >> 6);
 
     //Packet Length
-    unsigned packet_length = (packet[9] << 12) | packet[10] << 4 | packet[11] >> 4;
+    unsigned packet_length = (packet[9] << 12 | packet[10] << 4 | packet[11] >> 4);
     printf("Packet Length: %u\n", packet_length );
 
     //Maximum Hop Count                                          
-    printf("Maximum Hop Count: %u\n", (packet[11] << 1) | packet[12] >> 1);
+    printf("Maximum Hop Count: %u\n", ((packet[11] & 0x1F) << 4) | (packet[12] >> 1));
 
     //Checksum
     printf("Checksum: %u\n", (packet[12] << 16) | (packet[13] << 8) | packet[14] >> 8);
