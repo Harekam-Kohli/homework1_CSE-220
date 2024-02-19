@@ -38,7 +38,7 @@ void print_packet_sf(unsigned char packet[])
     printf("Payload: ");
     for (int i = 16; i < packet_length ; i += 4) {
         int payload_chunk = (packet[i] << 24) | (packet[i + 1] << 16) | (packet[i + 2] << 8) | packet[i + 3];
-        if(i==packet_length-1){
+        if(i==packet_length-4){
             printf("%d", payload_chunk);
         }
         else{
