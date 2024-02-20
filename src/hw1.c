@@ -131,17 +131,41 @@ unsigned int packetize_array_sf(int *array, unsigned int array_len, unsigned cha
                           unsigned int src_port, unsigned int dest_port, unsigned int maximum_hop_count,
                           unsigned int compression_scheme, unsigned int traffic_class)
 {
-    (void)array;
-    (void)array_len;
-    (void)packets;
-    (void)packets_len;
-    (void)max_payload;
-    (void)src_addr;
-    (void)dest_addr;
-    (void)src_port;
-    (void)dest_port;
-    (void)maximum_hop_count;
-    (void)compression_scheme;
-    (void)traffic_class;
-    return -1;
+       unsigned int num_packets = (array_len + max_payload - 1) / max_payload; 
+
+    for (unsigned int i = 0; i < packets_len && i < num_packets; i++) {        
+        unsigned int payload_size = (i == num_packets - 1) ? (array_len % max_payload) : max_payload;
+
+        unsigned int fragment_offset = i * max_payload * sizeof(int);
+        unsigned int packet_length = payload_size * sizeof(int) + 16;
+        unsigned int checksum = 0; 
+
+        packets[i] = malloc(packet_length);
+
+        packets[i][0] = (src_addr >> 20) & 0xFF;
+        packets[i][1] = (src_addr >> 12) & 0xFF;
+        packets[i][2] = (src_addr >> 4) & 0xFF;
+        packets[i][3] = ((src_addr & 0xF) << 4) | ((dest_addr >> 24) & 0xFF);
+        packets[i][4] = (dest_addr >> 16) & 0xFF;
+        packets[i][5] = (dest_addr >> 8) & 0xFF;
+        packets[i][6] = dest_addr & 0xFF;
+        packets[i][7] = ((src_port << 4) & 0xF0) | (dest_port & 0xF);
+        packets[i][8] = (fragment_offset >> 6) & 0xFF;
+        packets[i][9] = ((fragment_offset & 0x3F) << 2) | ((packet_length >> 12) & 0x3);
+        packets[i][10] = (packet_length >> 4) & 0xFF;
+        packets[i][11] = ((packet_length & 0xF) << 4) | ((maximum_hop_count >> 1) & 0xF);
+        packets[i][12] = ((maximum_hop_count & 0x1) << 7) | ((checksum >> 16) & 0x7F);
+        packets[i][13] = (checksum >> 8) & 0xFF;
+        packets[i][14] = checksum & 0xFF;
+        packets[i][15] = ((compression_scheme << 6) & 0xC0) | (traffic_class & 0x3F);
+
+        for (unsigned int j = 0, k = 16; j < payload_size; j++, k += sizeof(int)) {
+            packets[i][k] = (array[i * max_payload + j] >> 24) & 0xFF;
+            packets[i][k + 1] = (array[i * max_payload + j] >> 16) & 0xFF;
+            packets[i][k + 2] = (array[i * max_payload + j] >> 8) & 0xFF;
+            packets[i][k + 3] = array[i * max_payload + j] & 0xFF;
+        }
+    }
+
+    return num_packets;
 }
