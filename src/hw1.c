@@ -1,6 +1,5 @@
 #include "hw1.h"
 #include <stdio.h>
-#include <math.h>
 
 unsigned Source_Address, Destination_Address, Source_Port, Destination_Port, Fragment_Offset, packet_length, MHP, Check_Sum, Compression_Scheme, Traffic_Class;
 
@@ -23,11 +22,11 @@ void print_packet_sf(unsigned char packet[])
     printf("Destination Port: %u\n", Destination_Port);
 
     //Fragment Offset
-    Fragment_Offset = (packet[8]  << 6) | packet[9] >> 6;
+    Fragment_Offset = (packet[8]  << 6) | (packet[9] >> 2);
     printf("Fragment Offset: %u\n", Fragment_Offset );
 
     //Packet Length
-    packet_length = (packet[9] << 12 | packet[10] << 4 | packet[11] >> 4);
+    packet_length = (((packet[9]&0x03) << 12) | packet[10] << 4 | packet[11] >> 4);
     printf("Packet Length: %u\n", packet_length );
 
     //Maximum Hop Count 
@@ -45,13 +44,14 @@ void print_packet_sf(unsigned char packet[])
     //Traffic Class
     Traffic_Class = packet[15] & 0X3F;
     printf("Traffic Class: %u\n", Traffic_Class);
-
+    int payload_length = packet_length - 16;
     //Payload
     printf("Payload: ");
     for (int i = 16; i < packet_length ; i += 4) {
         int payload_chunk = (packet[i] << 24) | (packet[i + 1] << 16) | (packet[i + 2] << 8) | packet[i + 3];
-        if(i==packet_length-4){
+        if(i == packet_length-4 ){
             printf("%d", payload_chunk);
+            break;
         }
         else{
             printf("%d ", payload_chunk);
@@ -66,21 +66,23 @@ unsigned int compute_checksum_sf(unsigned char packet[])
     Destination_Address = ((packet[3] & 0X0F) << 24) | (packet[4] << 16) | (packet[5] << 8) | packet[6];
     Source_Port = (packet[7] >> 4) ;
     Destination_Port = (packet[7] & 0X0F);
-    Fragment_Offset = (packet[8]  << 6) | packet[9] >> 6;
-    packet_length = (packet[9] << 12 | packet[10] << 4 | packet[11] >> 4);
+    Fragment_Offset = (packet[8]  << 6) | (packet[9] >> 2);
+    packet_length = (((packet[9]&0x03) << 12) | packet[10] << 4 | packet[11] >> 4);
     MHP = ((packet[11] & 0x0F) << 1) | (packet[12]>>7);
     Compression_Scheme= (packet[15] >> 6);
     Traffic_Class = packet[15] & 0X3F;
 
-    unsigned int sum=0;
-    sum= Source_Address + Destination_Address + Source_Port + Destination_Port + Fragment_Offset + packet_length + MHP + Compression_Scheme + Traffic_Class;
+    unsigned int sum = Source_Address + Destination_Address + Source_Port + Destination_Port + Fragment_Offset + packet_length + MHP + Compression_Scheme + Traffic_Class;
 
     for (int i = 16; i < packet_length ; i += 4) {
         int payload_chunk = (packet[i] << 24) | (packet[i + 1] << 16) | (packet[i + 2] << 8) | packet[i + 3];
         sum += abs(payload_chunk);
     }
-    sum = sum%(unsigned int)(( 1 << 23) - 1);
+
+    sum = sum%(( 1 << 23) - 1);
+
     return sum;
+
 }
 
 unsigned int reconstruct_array_sf(unsigned char *packets[], unsigned int packets_len, int *array, unsigned int array_len) {

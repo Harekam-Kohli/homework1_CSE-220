@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "gtest.h": "c",
+        "tests_aux.h": "c"
+    }
+}
