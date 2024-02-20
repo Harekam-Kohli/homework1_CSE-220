@@ -73,12 +73,12 @@ unsigned int compute_checksum_sf(unsigned char packet[])
     Traffic_Class = packet[15] & 0X3F;
 
     unsigned int sum=0;
+    sum= Source_Address + Destination_Address + Source_Port + Destination_Port + Fragment_Offset + packet_length + MHP + Compression_Scheme + Traffic_Class;
 
     for (int i = 16; i < packet_length ; i += 4) {
         int payload_chunk = (packet[i] << 24) | (packet[i + 1] << 16) | (packet[i + 2] << 8) | packet[i + 3];
         sum += abs(payload_chunk);
     }
-    sum= Source_Address + Destination_Address + Source_Port + Destination_Port + Fragment_Offset + packet_length + MHP + Compression_Scheme + Traffic_Class;
     sum = sum%(unsigned int)(( 1 << 23) - 1);
     return sum;
 }
