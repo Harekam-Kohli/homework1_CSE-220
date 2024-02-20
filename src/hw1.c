@@ -75,7 +75,7 @@ unsigned int compute_checksum_sf(unsigned char packet[])
     Traffic_Class = packet[15] & 0X3F;
 
     unsigned int sum= Source_Address + Destination_Address + Source_Port + Destination_Port + Fragment_Offset + packet_length + MHP + Check_Sum + Compression_Scheme + Traffic_Class;
-    sum = sum%(unsigned int)(( 1 << 23) - 1);
+    sum = abs(sum%(unsigned int)(( 1 << 23) - 1));
     return sum;
 }
 
