@@ -71,7 +71,6 @@ unsigned int compute_checksum_sf(unsigned char packet[])
     MHP = ((packet[11] & 0x0F) << 1) | (packet[12]>>7);
     Compression_Scheme= (packet[15] >> 6);
     Traffic_Class = packet[15] & 0X3F;
-
     unsigned int sum = Source_Address + Destination_Address + Source_Port + Destination_Port + Fragment_Offset + packet_length + MHP + Compression_Scheme + Traffic_Class;
 
     for (int i = 16; i < packet_length ; i += 4) {
@@ -86,11 +85,45 @@ unsigned int compute_checksum_sf(unsigned char packet[])
 }
 
 unsigned int reconstruct_array_sf(unsigned char *packets[], unsigned int packets_len, int *array, unsigned int array_len) {
-    (void)packets;
-    (void)packets_len;
-    (void)array;
-    (void)array_len;
-    return -1;
+    unsigned int reconstructed_count = 0;
+
+    for (unsigned int i = 0; i < packets_len; i++) {
+
+        Source_Address =  (packets[i][0] << 20) | (packets[i][1] << 12) | (packets[i][2] << 4) | packets[i][3] >> 4;
+        Destination_Address = ((packets[i][3] & 0X0F) << 24) | (packets[i][4] << 16) | (packets[i][5] << 8) | packets[i][6];
+        Source_Port = (packets[i][7] >> 4) ;
+        Destination_Port = (packets[i][7] & 0X0F);
+        Fragment_Offset = (packets[i][8]  << 6) | (packets[i][9] >> 2);
+        packet_length = (((packets[i][9]&0x03) << 12) | packets[i][10] << 4 | packets[i][11] >> 4);
+        MHP = ((packets[i][11] & 0x0F) << 1) | (packets[i][12]>>7);
+        Compression_Scheme= (packets[i][15] >> 6);
+        Traffic_Class = packets[i][15] & 0X3F;
+        Check_Sum = ((packets[i][12] & 0X7F) << 16) | (packets[i][13] << 8) | packets[i][14];
+        
+        if (compute_checksum_sf(packets[i]) !=Check_Sum) 
+        {
+            continue;
+        }
+        else
+        {
+            
+        unsigned int payload_size = packet_length - 16;
+        unsigned int fragment_offset = Fragment_Offset / 4;
+
+        unsigned int start_index = fragment_offset;
+
+       
+        for (unsigned int j = 16, k = start_index; j < 16 + payload_size; j += 4, k++) {
+            if (k < array_len) {
+                array[k] = (packets[i][j] << 24) | (packets[i][j + 1] << 16) | (packets[i][j + 2] << 8) | packets[i][j + 3];
+                reconstructed_count++;
+            } else {
+                break;
+            }
+        }
+        }
+    }
+    return reconstructed_count;
 }
 
 unsigned int packetize_array_sf(int *array, unsigned int array_len, unsigned char *packets[], unsigned int packets_len,
